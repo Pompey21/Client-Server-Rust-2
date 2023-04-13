@@ -30,7 +30,10 @@ fn main() {
     for stream in listener.incoming() {
         match stream {
             Ok(stream) => {
-                std::thread::spawn(|| handle_client(stream));
+                // why do I need to spawn a new thread? 
+                // with out it, the server will only handle one connection!
+                // std::thread::spawn(|| handle_client(stream));
+                handle_client(stream);
             }
             Err(e) => {
                 eprintln!("Error accepting connection: {}", e);
