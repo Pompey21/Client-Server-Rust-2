@@ -1,11 +1,16 @@
-use std::io::prelude::*;
+use std::io::{Read, Write};
 use std::net::TcpStream;
 
 fn main() {
-    if let Ok(stream) = TcpStream::connect("127.0.0.1:8080") {
-        println!("Connected to the server!");
-    } else {
-        println!("Couldn't connect to server...");
-    }
+    let mut stream = TcpStream::connect("127.0.0.1:8080").unwrap();
+    let message = b"Hello, server!";
+
+    // send message to server
+    stream.write_all(message).unwrap();
+
+    // receive response from server
+    let mut buffer = [0; 512];
+    stream.read(&mut buffer).unwrap();
+    println!("Received: {}", String::from_utf8_lossy(&buffer));
 }
 
