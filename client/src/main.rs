@@ -29,11 +29,13 @@ fn main() {
     stream.write_all(&num_message_str.as_bytes()).unwrap();
 
     // receive response from server
-    let mut buffer = [0u8; 4];
+    let mut buffer = [0u8; 8];
     stream.read(&mut buffer).unwrap();
 
     let received_num_message_str = String::from_utf8_lossy(&buffer).into_owned();
 
     // let received_num_message = i32::from_be_bytes(buffer);
     println!("Received: {}\n",received_num_message_str);
+
+    loop {}
 }
