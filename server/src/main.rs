@@ -3,7 +3,7 @@ use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 
 fn handle_client(mut stream: TcpStream) {
-    let mut buffer = [0; 512];
+    let mut buffer = [0u8; 8];
     loop {
         match stream.read(&mut buffer) {
             Ok(n) if n == 0 => {
@@ -13,7 +13,8 @@ fn handle_client(mut stream: TcpStream) {
             Ok(n) => {
                 // echo back to the client
                 stream.write_all(&buffer[0..n]).unwrap();
-                println!("Received: {}", String::from_utf8_lossy(&buffer));
+                let received_num_message = i64::from_be_bytes(buffer);
+                println!("Received: {}", received_num_message);
             }
             Err(e) => {
                 eprintln!("Error reading from stream: {}", e);
@@ -22,6 +23,8 @@ fn handle_client(mut stream: TcpStream) {
         }
     }
 }
+
+
 
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
