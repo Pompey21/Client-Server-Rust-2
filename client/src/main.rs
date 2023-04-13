@@ -25,6 +25,6 @@ fn main() {
     let mut buffer = [0u8; 8];
     stream.read(&mut buffer).unwrap();
     let received_num_message = i64::from_be_bytes(buffer);
-    println!("Received: {}",received_num_message);
+    println!("Received: {}\n",received_num_message);
 }
 
