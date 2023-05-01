@@ -5,3 +5,5 @@ A simple client-server application but I start from scratch!
 If you want to run it, you will have to run it from two different terminals. <br>
 1. Navigate into the *server* folder and execute the command *cargo run*.
 2. Navigate into the *client* folder and execture the command *cargo run*.
+
+Note: Before you run the *cargo run* command, try running *cargo build* to make sure dependancies and crates are all set!
