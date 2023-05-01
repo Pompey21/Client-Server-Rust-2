@@ -1,3 +1,7 @@
+// ======================================
+// CLIENT IMPLEMENTATION
+// ======================================
+
 #[allow(dead_code)]
 use std::io::{Read, Write};
 use std::{net::{TcpListener, TcpStream, SocketAddr}, mem};
