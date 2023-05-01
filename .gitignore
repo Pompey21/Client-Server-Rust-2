@@ -1,0 +1,3 @@
+*.lock
+*.bin
+*.rustc_info.jsondebug.log
