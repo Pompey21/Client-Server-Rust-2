@@ -7,9 +7,11 @@ use std::net::{TcpStream};
 use std::thread;
 mod user;
 use user::User;
+// use tokio::sync::{RwLock, Mutex};
+// use tokio::task;
 
-
-fn main() {
+#[tokio::main]
+async fn main() {
     let mut stream = TcpStream::connect("127.0.0.1:8080").unwrap();
 
     let mut user_x = User::new("Marko".to_string(), "123".to_string(), 100, 100, false);

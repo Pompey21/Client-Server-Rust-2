@@ -4,9 +4,11 @@
 
 #[allow(dead_code)]
 use std::io::{Read, Write};
-use std::{net::{TcpListener, TcpStream}, collections::HashMap};
+use std::{net::{TcpListener, TcpStream}, collections::HashMap, sync::Arc};
 mod user;
 use user::User;
+use tokio::sync::{RwLock, Mutex};
+use tokio::task;
 
 fn handle_serialised_user_object(mut stream: TcpStream) {
     const SIZE_OF_USER: usize = std::mem::size_of::<User>();
@@ -40,9 +42,10 @@ fn handle_serialised_user_object(mut stream: TcpStream) {
 
 
 
-
-fn main() {
-    // let mut user_log = HashMap::new();
+#[tokio::main]
+async fn main() {
+    // let global_var = Arc::new(RwLock::new(HashMap::new()));
+    let mut user_log:Arc<RwLock<HashMap<User, bool>>> = Arc::new(RwLock::new(HashMap::new()));
 
     let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
 
