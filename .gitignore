@@ -1,5 +1,0 @@
-client/target/
-server/target/
-*.lock
-*.bin
-*.rustc_info.json
