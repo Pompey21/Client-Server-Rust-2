@@ -10,7 +10,7 @@ use user::User;
 use tokio::sync::{RwLock, Mutex};
 use tokio::task;
 
-fn handle_serialised_user_object(mut stream: TcpStream) {
+async fn handle_serialised_user_object(mut stream: TcpStream, mut user_log: &Arc<RwLock<HashMap<User, bool>>>) {
     const SIZE_OF_USER: usize = std::mem::size_of::<User>();
     let mut buffer = [0; SIZE_OF_USER];
     loop {
@@ -28,6 +28,9 @@ fn handle_serialised_user_object(mut stream: TcpStream) {
                 let received_user_object = bincode::deserialize::<User>(&buffer).unwrap();
                 println!("Received: {:?}\n", received_user_object);
 
+                // Modify the global variable from the main task
+                let mut write_lock = user_log.write().await;
+                write_lock.insert(received_user_object, true);
                 // break;
 
 
@@ -44,7 +47,7 @@ fn handle_serialised_user_object(mut stream: TcpStream) {
 
 #[tokio::main]
 async fn main() {
-    // let global_var = Arc::new(RwLock::new(HashMap::new()));
+    // creating that global variable allowing for concurrent access (writes and reads)
     let mut user_log:Arc<RwLock<HashMap<User, bool>>> = Arc::new(RwLock::new(HashMap::new()));
 
     let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
@@ -55,7 +58,9 @@ async fn main() {
             Ok(stream) => {
                 println!("{:?}", stream.local_addr().unwrap());
                 println!("handlam");
-                std::thread::spawn(|| handle_serialised_user_object(stream));
+                let mut user_log_clone = user_log.clone();
+                std::thread::spawn(move || {handle_serialised_user_object(stream, &user_log_clone)});
+                
                 // handle_client_ultimate(stream);
             }
             Err(e) => {
