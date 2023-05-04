@@ -9,9 +9,9 @@ mod user;
 use user::User;
 use tokio::sync::RwLock;
 
-static mut GLOBAL_USER_LOG: HashMap<User, bool> = HashMap::new();
+// static mut GLOBAL_USER_LOG: HashMap<User, bool> = HashMap::new();
 
-async fn handle_serialised_user_object(mut stream: TcpStream, user_log: Arc<RwLock<HashMap<User, bool>>>) {
+async fn handle_serialised_user_object(mut stream: TcpStream) {
     const SIZE_OF_USER: usize = std::mem::size_of::<User>();
     let mut buffer = [0; SIZE_OF_USER];
     loop {
@@ -30,8 +30,8 @@ async fn handle_serialised_user_object(mut stream: TcpStream, user_log: Arc<RwLo
                 println!("Received: {:?}\n", received_user_object);
 
                 // Modify the global variable from the main task
-                let mut write_lock = user_log.write().await;
-                write_lock.insert(received_user_object, true);
+                // let mut write_lock = user_log.write().await;
+                // write_lock.insert(received_user_object, true);
                 // break;
 
 
@@ -49,7 +49,7 @@ async fn handle_serialised_user_object(mut stream: TcpStream, user_log: Arc<RwLo
 #[tokio::main]
 async fn main() {
     // creating that global variable allowing for concurrent access (writes and reads)
-    let user_log:Arc<RwLock<HashMap<User, bool>>> = Arc::new(RwLock::new(HashMap::new()));
+    // let user_log:Arc<RwLock<HashMap<User, bool>>> = Arc::new(RwLock::new(HashMap::new()));
 
     let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
 
@@ -59,8 +59,8 @@ async fn main() {
             Ok(stream) => {
                 println!("{:?}", stream.local_addr().unwrap());
                 println!("handlam");
-                let user_log_clone = user_log.clone();
-                std::thread::spawn(|| {handle_serialised_user_object(stream, user_log_clone)});
+                // let user_log_clone = user_log.clone();
+                std::thread::spawn(|| handle_serialised_user_object(stream));
                 
                 // handle_client_ultimate(stream);
             }
