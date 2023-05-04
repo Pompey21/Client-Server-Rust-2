@@ -19,22 +19,18 @@ fn main() {
     let my_deserialized_user_x = bincode::deserialize::<User>(&my_serialized_user_x).unwrap();
     println!("{my_deserialized_user_x:?}");
 
-
-    let num_message: i32 = 42;
-    let num_message_str = num_message.to_string();
-
     // send message to server
-    // stream.write_all(&num_message.to_be_bytes()).unwrap();
-    stream.write_all(&num_message_str.as_bytes()).unwrap();
+    stream.write_all(&my_serialized_user_x).unwrap();
 
     // receive response from server
-    let mut buffer = [0u8; 8];
+    const SIZE_OF_USER: usize = std::mem::size_of::<User>();
+    let mut buffer = [0; SIZE_OF_USER];
     stream.read(&mut buffer).unwrap();
 
-    let received_num_message_str: String = String::from_utf8_lossy(&buffer).into_owned();
+    let returned_message: User = bincode::deserialize::<User>(&buffer).unwrap();//String::from_utf8_lossy(&buffer).into_owned();
 
     // let received_num_message = i32::from_be_bytes(buffer);
-    println!("Received: {}\n",received_num_message_str);
+    println!("Received: {:?}\n", returned_message);
 
     loop {
         thread::sleep(std::time::Duration::from_secs(1));

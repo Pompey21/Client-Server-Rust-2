@@ -4,12 +4,13 @@
 
 #[allow(dead_code)]
 use std::io::{Read, Write};
-use std::{net::{TcpListener, TcpStream, SocketAddr}, mem};
+use std::{net::{TcpListener, TcpStream}, collections::HashMap};
 mod user;
 use user::User;
 
-fn handle_client_ultimate(mut stream: TcpStream) {
-    let mut buffer = [0u8; 8];
+fn handle_serialised_user_object(mut stream: TcpStream) {
+    const SIZE_OF_USER: usize = std::mem::size_of::<User>();
+    let mut buffer = [0; SIZE_OF_USER];
     loop {
         match stream.read(&mut buffer) {
             Ok(n) if n == 0 => {
@@ -22,15 +23,9 @@ fn handle_client_ultimate(mut stream: TcpStream) {
                 stream.write_all(&buffer[0..n]).unwrap();
 
                 // handle the received message
-                let received_num_message_str = String::from_utf8_lossy(&buffer).into_owned();
-                println!("This is the string message: {}", received_num_message_str);
-                println!("{}",received_num_message_str.len());
-                let received_num_message_str_trimmed = received_num_message_str.trim_end_matches(char::from(0));
-                println!("{}",received_num_message_str_trimmed.len());
+                let received_user_object = bincode::deserialize::<User>(&buffer).unwrap();
+                println!("Received: {:?}\n", received_user_object);
 
-
-                let num_message: i32 = received_num_message_str_trimmed.parse().unwrap();
-                println!("Received: {}\n", num_message);
                 // break;
 
 
@@ -44,9 +39,10 @@ fn handle_client_ultimate(mut stream: TcpStream) {
 }
 
 
+
+
 fn main() {
-    let mut global_ticker: i64 = 0;
-    print!("global_ticker: {}\n", global_ticker);
+    // let mut user_log = HashMap::new();
 
     let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
 
@@ -56,7 +52,7 @@ fn main() {
             Ok(stream) => {
                 println!("{:?}", stream.local_addr().unwrap());
                 println!("handlam");
-                std::thread::spawn(|| handle_client_ultimate(stream));
+                std::thread::spawn(|| handle_serialised_user_object(stream));
                 // handle_client_ultimate(stream);
             }
             Err(e) => {
