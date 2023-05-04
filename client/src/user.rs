@@ -7,7 +7,7 @@
 use std::collections::HashMap;
 
 // implementing the User struct
-#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, Eq, Hash, PartialEq)]
 pub struct User {
     user_name: String,
     password: String,
