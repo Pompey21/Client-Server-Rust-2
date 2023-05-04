@@ -6,8 +6,10 @@
 use std::io::{Read, Write};
 use std::{net::{TcpListener, TcpStream}, collections::HashMap, sync::{Arc, RwLock}};
 
+mod request;
 mod user;
 use user::User;
+use request::Request;
 
 fn handle_serialised_user_object(mut stream: TcpStream, user_log: Arc<RwLock<HashMap<User, bool>>>) {
 
