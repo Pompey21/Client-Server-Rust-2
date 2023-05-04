@@ -30,8 +30,6 @@ async fn main() {
     stream.read(&mut buffer).unwrap();
 
     let returned_message: User = bincode::deserialize::<User>(&buffer).unwrap();
-
-    // let received_num_message = i32::from_be_bytes(buffer);
     println!("Received: {:?}\n", returned_message);
 
     loop {

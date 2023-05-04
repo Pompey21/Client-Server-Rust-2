@@ -48,8 +48,8 @@ fn handle_serialised_user_object(mut stream: TcpStream, user_log: Arc<RwLock<Has
 
 
 
-
-fn main() {
+#[tokio::main]
+async fn main() {
     // creating that global variable allowing for concurrent access (writes and reads)
     let user_log:Arc<RwLock<HashMap<User, bool>>> = Arc::new(RwLock::new(HashMap::new()));
 
@@ -64,7 +64,6 @@ fn main() {
                 println!("handlam");
 
                 let user_log_clone = user_log.clone();
-                // std::thread::spawn(|| handle_serialised_user_object(stream));
                 std::thread::spawn(|| {handle_serialised_user_object(stream, user_log_clone)});
 
             }

@@ -1,11 +1,3 @@
-// #[macro_use]
-// extern crate serde_derive;
-// extern crate serde;
-// extern crate serde_json;
-
-
-use std::collections::HashMap;
-
 // implementing the User struct
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, Eq, Hash, PartialEq)]
 pub struct User {
