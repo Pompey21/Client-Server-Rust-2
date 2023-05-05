@@ -11,10 +11,22 @@ mod user;
 use user::User;
 use request::Request;
 
+fn handle_post_request(received_user_object: Request, user_log: Arc<RwLock<HashMap<User, bool>>>) {
+    if received_user_object.get_post_type().starts_with("USER") {
+        let mut write_lock = user_log.write().unwrap();
+        write_lock.insert(received_user_object.get_user_data().clone(), true);
+        println!("User logged in: {:?}", write_lock);
+    }
+
+    if received_user_object.get_post_type().starts_with("OFFER") {
+        println!("Offer type: {:?}", received_user_object.get_post_type());
+    }
+}
+
 fn handle_serialised_user_object(mut stream: TcpStream, user_log: Arc<RwLock<HashMap<User, bool>>>) {
 
-    const SIZE_OF_USER: usize = std::mem::size_of::<User>();
-    let mut buffer = [0; SIZE_OF_USER];
+    const SIZE_OF_REQUEST: usize = std::mem::size_of::<Request>();
+    let mut buffer = [0; SIZE_OF_REQUEST];
     loop {
         match stream.read(&mut buffer) {
             Ok(n) if n == 0 => {
@@ -27,16 +39,12 @@ fn handle_serialised_user_object(mut stream: TcpStream, user_log: Arc<RwLock<Has
                 stream.write_all(&buffer[0..n]).unwrap();
 
                 // handle the received message
-                let received_user_object = bincode::deserialize::<User>(&buffer).unwrap();
+                let received_user_object: Request = bincode::deserialize::<Request>(&buffer).unwrap();
                 println!("Received: {:?}\n", received_user_object);
 
-
-                
-                // Modify the global variable from the main task
-                let mut write_lock = user_log.write().unwrap();
-                write_lock.insert(received_user_object, true);
-
-                // break;
+                if received_user_object.get_request_type().starts_with("POST") {
+                    handle_post_request(received_user_object, user_log.clone());
+                } 
 
 
             }

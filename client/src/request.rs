@@ -24,12 +24,4 @@ impl Request {
     pub fn get_user_data(&self) -> &User {
         &self.user_data
     }
-
-    pub fn get_post_type(&self) -> &String {
-        &self.post_type
-    }
-
-    pub fn get_req_type(&self) -> &String {
-        &self.req_type
-    }
 }
