@@ -62,6 +62,7 @@ fn handle_serialised_user_object(mut stream: TcpStream, user_log: Arc<RwLock<Has
 async fn main() {
     // creating that global variable allowing for concurrent access (writes and reads)
     let user_log:Arc<RwLock<HashMap<User, bool>>> = Arc::new(RwLock::new(HashMap::new()));
+    // let offers_log: Arc<RwLock<HashMap<User, 
 
 
     let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
