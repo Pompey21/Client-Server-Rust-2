@@ -54,4 +54,6 @@ fn send_request(request: Request) {
     const SIZE_OF_REQUEST: usize = std::mem::size_of::<Request>();
     let mut buffer = [0; SIZE_OF_REQUEST];
     stream.read(&mut buffer).unwrap();
+    let response = String::from_utf8_lossy(&buffer[..]);
+    println!("Response: {}", response);
 }

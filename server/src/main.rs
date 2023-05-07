@@ -16,54 +16,6 @@ use offer::Offer;
 use std::io::BufRead;
 
 
-
-
-
-
-
-fn handle_serialised_user_object(mut stream: TcpStream, user_log: Arc<RwLock<HashMap<User, bool>>>, offers_log: Arc<RwLock<HashMap<User, Offer>>>) {
-
-    const SIZE_OF_REQUEST: usize = std::mem::size_of::<Request>();
-    let mut buffer = [0; SIZE_OF_REQUEST];
-    loop {
-        match stream.read(&mut buffer) {
-            Ok(n) if n == 0 => {
-                // connection closed
-                break;
-            }
-            Ok(n) => {
-                println!("n: {}", n);
-                // echo back to the client
-                stream.write_all(&buffer[0..n]).unwrap();
-
-                // handle the received message
-                let received_user_object: Request = bincode::deserialize::<Request>(&buffer).unwrap();
-                println!("Received: {:?}\n", received_user_object);
-
-                if received_user_object.get_request_type().starts_with("POST") {
-                    handle_post_request(received_user_object, user_log.clone(), offers_log.clone());
-                }
-
-                else {
-                    // println!("GET request");
-                    handle_get_request(received_user_object, user_log.clone(), offers_log.clone());
-                }
-
-
-            }
-            Err(e) => {
-                eprintln!("Error reading from stream: {}", e);
-                // break;
-            }
-        }
-    }
-}
-
-
-
-
-
-
 #[tokio::main]
 async fn main() {
     // creating that global variables allowing for concurrent access (writes and reads)
@@ -146,6 +98,47 @@ fn initialise_global_variables(parsed_data: Vec<(User,Offer)>, user_log: Arc<RwL
 // Handle the requests
 // ===========================================================
 // ===========================================================
+// Handling the serialised user object
+fn handle_serialised_user_object(mut stream: TcpStream, user_log: Arc<RwLock<HashMap<User, bool>>>, offers_log: Arc<RwLock<HashMap<User, Offer>>>) {
+
+    const SIZE_OF_REQUEST: usize = std::mem::size_of::<Request>();
+    let mut buffer = [0; SIZE_OF_REQUEST];
+    loop {
+        match stream.read(&mut buffer) {
+            Ok(n) if n == 0 => {
+                // connection closed
+                break;
+            }
+            Ok(n) => {
+                println!("n: {}", n);
+
+                // send response to client
+                stream.write_all("200 OK".to_string().as_bytes()).unwrap();
+
+                // handle the received message
+                let received_user_object: Request = bincode::deserialize::<Request>(&buffer).unwrap();
+                println!("Received: {:?}\n", received_user_object);
+
+                if received_user_object.get_request_type().starts_with("POST") {
+                    handle_post_request(received_user_object, user_log.clone(), offers_log.clone());
+                }
+
+                else {
+                    // println!("GET request");
+                    handle_get_request(received_user_object, user_log.clone(), offers_log.clone());
+                }
+
+
+            }
+            Err(e) => {
+                eprintln!("Error reading from stream: {}", e);
+                stream.write_all("400 BAD REQUEST".to_string().as_bytes()).unwrap();
+                // break;
+            }
+        }
+    }
+}
+
 // Handling the POST requests
 fn handle_post_request(received_user_object: Request, user_log: Arc<RwLock<HashMap<User, bool>>>, offers_log: Arc<RwLock<HashMap<User, Offer>>>) {
     if received_user_object.get_post_type().starts_with("USER") {
