@@ -87,13 +87,7 @@ fn handle_serialised_user_object(mut stream: TcpStream, user_log: Arc<RwLock<Has
 }
 
 
-fn read_from_txt_file(text_file_name: String) {
-    let file = File::open(text_file_name).unwrap();
-    let reader = BufReader::new(file);
-    for line in reader.lines() {
-        println!("{:?}", line);
-    }
-}
+
 
 
 
@@ -107,7 +101,14 @@ async fn main() {
     // list of offers
     let offers_log: Arc<RwLock<HashMap<User, Offer>>> = Arc::new(RwLock::new(HashMap::new()));
 
-    read_from_txt_file("/Users/admin/Desktop/Client-Server-Rust-2/server/src/offers_init.txt".to_string());
+    // initialising the offers
+    let parsed_data: Vec<(User,Offer)> = read_from_txt_file("/Users/admin/Desktop/Client-Server-Rust-2/server/src/offers_init.txt".to_string());
+    initialise_global_variables(parsed_data, user_log.clone(), offers_log.clone());
+
+    println!("");
+    println!("User log: {:?}", user_log);
+    println!("");
+    println!("Offers log: {:?}", offers_log);
 
 
     let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
@@ -130,3 +131,41 @@ async fn main() {
         }
     }
 }
+
+
+// ===========================================================
+//  Initialising the offers
+// ===========================================================
+// Reading the data from the text file
+fn read_from_txt_file(text_file_name: String) -> Vec<(User, Offer)> {
+    let mut parsed_data: Vec<(User, Offer)> = Vec::new();
+    let file = File::open(text_file_name).unwrap();
+    let reader = BufReader::new(file);
+    for line in reader.lines() {
+        let line_string = line.unwrap();
+        let line_vector: Vec<&str> = line_string.split(";").collect();
+        println!("{:?}", line_vector);
+        let (user_new, offer_new) = generate_instances(line_vector);
+        println!("User: {:?}, Offer: {:?}", user_new, offer_new);
+        parsed_data.push((user_new, offer_new));
+    }
+    return parsed_data;
+}
+
+// Parsing the data from the text file
+fn generate_instances(line_vector: Vec<&str>) -> (User, Offer) {
+    let user_new: User = User::new(line_vector[0].to_string(), line_vector[1].to_string(), line_vector[2].parse::<u32>().unwrap(), line_vector[3].parse::<u32>().unwrap(), true);
+    let offer_new: Offer = Offer::new(100, line_vector[3].parse::<u32>().unwrap(), line_vector[4].parse::<u32>().unwrap());
+    return (user_new, offer_new);
+}
+
+// Initialising the global variables
+fn initialise_global_variables(parsed_data: Vec<(User,Offer)>, user_log: Arc<RwLock<HashMap<User, bool>>>, offers_log: Arc<RwLock<HashMap<User, Offer>>>) {
+    let mut write_lock_offers = offers_log.write().unwrap();
+    let mut write_lock_users = user_log.write().unwrap();
+    for (user, offer) in parsed_data {
+        write_lock_offers.insert(user.clone(), offer.clone());
+        write_lock_users.insert(user.clone(), true);
+    }
+}
+
