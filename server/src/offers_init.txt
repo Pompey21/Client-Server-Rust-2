@@ -1,0 +1,5 @@
+Lan Strlic;kripto4ever;100;50;10;
+Miha Bercic;fitnes_in_programiranje;100;40;11;
+Yassine;i_blame_bob;100;70;5;
+Bob;i_blame_yassine;100;70;5;
+Tudor;wanna_be_rolexito;100;100;1;
