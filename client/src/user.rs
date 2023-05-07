@@ -1,11 +1,3 @@
-// #[macro_use]
-// extern crate serde_derive;
-// extern crate serde;
-// extern crate serde_json;
-
-
-use std::collections::HashMap;
-
 // implementing the User struct
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, Eq, Hash, PartialEq)]
 pub struct User {
@@ -16,6 +8,7 @@ pub struct User {
     offer: bool,
 }
 
+#[allow(dead_code)]
 impl User {
     pub fn new(user_name: String, password:String, funds: u32, memory:u32, offer:bool) -> User {
         User {user_name, password,funds, memory,offer}
