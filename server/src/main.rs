@@ -4,7 +4,7 @@
 
 #[allow(dead_code)]
 use std::io::{Read, Write};
-use std::{net::{TcpListener, TcpStream}, collections::HashMap, sync::{Arc, RwLock}};
+use std::{net::{TcpListener, TcpStream}, collections::HashMap, sync::{Arc, RwLock}, fs::File, io::BufReader};
 
 mod request;
 mod user;
@@ -13,6 +13,7 @@ mod offer;
 use user::User;
 use request::Request;
 use offer::Offer;
+use std::io::BufRead;
 
 
 fn handle_post_request(received_user_object: Request, user_log: Arc<RwLock<HashMap<User, bool>>>, offers_log: Arc<RwLock<HashMap<User, Offer>>>) {
@@ -86,6 +87,15 @@ fn handle_serialised_user_object(mut stream: TcpStream, user_log: Arc<RwLock<Has
 }
 
 
+fn read_from_txt_file(text_file_name: String) {
+    let file = File::open(text_file_name).unwrap();
+    let reader = BufReader::new(file);
+    for line in reader.lines() {
+        println!("{:?}", line);
+    }
+}
+
+
 
 #[tokio::main]
 async fn main() {
@@ -96,6 +106,8 @@ async fn main() {
 
     // list of offers
     let offers_log: Arc<RwLock<HashMap<User, Offer>>> = Arc::new(RwLock::new(HashMap::new()));
+
+    read_from_txt_file("/Users/admin/Desktop/Client-Server-Rust-2/server/src/offers_init.txt".to_string());
 
 
     let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
