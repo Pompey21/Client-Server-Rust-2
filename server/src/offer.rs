@@ -1,7 +1,5 @@
 // implementing the Offer struct
 
-use crate::user::User;
-
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, Eq, Hash, PartialEq)]
 pub struct Offer {
     offer_time: u32,

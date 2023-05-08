@@ -7,11 +7,10 @@ use std::io::{Read, Write};
 use std::{net::{TcpListener, TcpStream}, collections::HashMap, sync::{Arc, RwLock}, fs::File, io::BufReader};
 
 mod requests;
-mod request;
 mod user;
 mod offer;
 
-use requests::{POST_User, POST_Offer, POST_Request, GET_Offer, GET_Request, Request, Either, Either_Request, Request_1};
+use requests::{POST_User, POST_Offer, POST_Request, GET_Offer, GET_Request, Either, Request_1};
 
 use user::User;
 use offer::Offer;
@@ -95,6 +94,7 @@ fn initialise_global_variables(parsed_data: Vec<(User,Offer)>, user_log: Arc<RwL
 // ===========================================================
 // ===========================================================
 // receive the message
+const HEADER_SIZE: usize = 4;
 fn receive_message(mut stream: TcpStream, user_log: Arc<RwLock<HashMap<User, bool>>>, offers_log: Arc<RwLock<HashMap<User, Offer>>>) {
     
     // Read the message length from the header
@@ -105,6 +105,7 @@ fn receive_message(mut stream: TcpStream, user_log: Arc<RwLock<HashMap<User, boo
 
     // Allocate a buffer to receive the message payload
     let mut buffer = vec![0; message_len as usize];
+    println!("Buffer type: {}", std::any::type_name::<Vec<u8>>());
 
     // Read the message payload into the buffer
     // stream.read_exact(&mut buffer).unwrap();
@@ -122,18 +123,63 @@ fn receive_message(mut stream: TcpStream, user_log: Arc<RwLock<HashMap<User, boo
                 // send response to client
                 stream.write_all("200 OK".to_string().as_bytes()).unwrap();
                 println!("Sent: 200 OK\n");
+
+                // handle the received message
+                let received_user_object = deserialise_post_req(buffer.clone());
+
+                match received_user_object.get_data_load().get_data_load() {
+                    Either::POST_User(user) => {
+                        let rec_usr_obj = user.get_user();
+                        println!("Received user object: {:?}", rec_usr_obj);
+
+                        // add the user to the user_log
+                        let mut write_lock = user_log.write().unwrap();
+                        write_lock.insert(rec_usr_obj.clone(), true);
+
+                        // // add the user to the offers_log - just as a key
+                        // let mut write_lock = offers_log.write().unwrap();
+                        // write_lock.insert(rec_usr_obj.clone(), Offer::new(0, 0, 0));
+                    },
+                    Either::POST_Offer(offer) => {}
+                }
+                println!("Received: {:?}\n", received_user_object);
+
             } 
             // Handling POST_Offer
             Ok(n) if n == 40 => {
                 // send response to client
                 stream.write_all("200 OK".to_string().as_bytes()).unwrap();
                 println!("Sent: 200 OK\n");
+
+                // handle the received message
+                let received_user_object = deserialise_post_req(buffer.clone());
+
+
+                match received_user_object.get_data_load().get_data_load() {
+                    Either::POST_User(user) => {},
+                    Either::POST_Offer(offer) => {
+                        let rec_ofr_obj = offer.get_offer();
+                        println!("Received offer object: {:?}", rec_ofr_obj);
+
+                        // // add the offer to the offers_log
+                        // let mut write_lock = offers_log.write().unwrap();
+                        // write_lock.insert(rec_ofr_obj.clone(), offer.clone());
+                    }
+                }
+                println!("Received: {:?}\n", received_user_object);
             }
             // Handling GET_Offer
             Ok(n) if n == 34 => {
                 // send response to client
                 stream.write_all("200 OK".to_string().as_bytes()).unwrap();
                 println!("Sent: 200 OK\n");
+
+                // handle received message
+                let received_user_object: Request_1<GET_Request> = deserialise_get_req(buffer.clone());
+                println!("Received: {:?}", received_user_object);
+                // unpack the message
+                let received_offer: GET_Offer = unpack_get_req(received_user_object);
+                println!("Received user: {:?}", received_offer);
             }
 
             Ok(n) => {
@@ -158,49 +204,31 @@ fn receive_message(mut stream: TcpStream, user_log: Arc<RwLock<HashMap<User, boo
 }
 
 
-// Handling the serialised user object
-const HEADER_SIZE: usize = 4;
-fn handle_serialised_user_object(mut stream: TcpStream, user_log: Arc<RwLock<HashMap<User, bool>>>, offers_log: Arc<RwLock<HashMap<User, Offer>>>) {
-    
-    // Read the message length from the header
-    let mut header = [0; HEADER_SIZE];
-    stream.read_exact(&mut header).unwrap();
-    let message_len = u32::from_be_bytes(header);
-    println!("Message length: {}", message_len);
-
-    // Allocate a buffer to receive the message payload
-    let mut buffer = vec![0; message_len as usize];
-
-    // Read the message payload into the buffer
-    // stream.read_exact(&mut buffer).unwrap();
 
 
-    loop {
-        match stream.read(&mut buffer) {
-            // println!("Received: {:?}\n", buffer);
-            Ok(n) if n == 0 => {
-                // connection closed
-                break;
-            }
-            Ok(n) => {
-                println!("n: {}", n);
+// ===========================================================
+// Deserialise POST and GET requests
+// ===========================================================
+// Deserialise post request
+fn deserialise_post_req(mut buffer: Vec<u8>) -> Request_1<POST_Request> {
+    let received_user_object: Request_1<POST_Request> = bincode::deserialize::<Request_1<POST_Request>>(&buffer).unwrap();
+    // println!("Received: {:?}\n", received_user_object);
+    return received_user_object;
+}
 
-                // send response to client
-                stream.write_all("200 OK".to_string().as_bytes()).unwrap();
-                println!("Sent: 200 OK\n");
-
-                // handle the received message
-                // let received_user_object: Request_1<T> = bincode::deserialize::<Request_1<T>>(&buffer).unwrap();
-                // println!("Received: {:?}\n", received_user_object);
-
-            }
-            Err(e) => {
-                eprintln!("Error reading from stream: {}", e);
-                stream.write_all("400 BAD REQUEST".to_string().as_bytes()).unwrap();
-                // break;
-            }
-        }
-    }
+// Deserialise get request
+fn deserialise_get_req(mut buffer: Vec<u8>) -> Request_1<GET_Request> {
+    let received_user_object: Request_1<GET_Request> = bincode::deserialize::<Request_1<GET_Request>>(&buffer).unwrap();
+    // println!("Received: {:?}\n", received_user_object);
+    return received_user_object;
+}
+// ===========================================================
+// ===========================================================
+// Handle deserialised objects -> unpack the data
+// ===========================================================
+fn unpack_get_req(received_user_object: Request_1<GET_Request>) -> GET_Offer {
+    let received_user = received_user_object.get_data_load().get_data_load();
+    return received_user.clone();
 }
 
 
@@ -208,52 +236,4 @@ fn handle_serialised_user_object(mut stream: TcpStream, user_log: Arc<RwLock<Has
 
 
 
-// Handling the POST requests
-fn handle_post_request(received_user_object: Request, user_log: Arc<RwLock<HashMap<User, bool>>>, offers_log: Arc<RwLock<HashMap<User, Offer>>>) {
-
-    println!("Received: {:?}\n", received_user_object);
-
-    
-
-    // if received_user_object.get_post_type().starts_with("USER") {
-    //     let mut write_lock = user_log.write().unwrap();
-    //     write_lock.insert(received_user_object.get_user_data().clone(), true);
-    //     println!("User logged in: {:?}", write_lock);
-    // }
-
-    // if received_user_object.get_post_type().starts_with("OFFER") {
-    //     let mut write_lock = offers_log.write().unwrap();
-    //     write_lock.insert(received_user_object.get_user_data().clone(), received_user_object.get_offer_data().clone());
-
-    //     println!("Offer type: {:?}", received_user_object.get_post_type());
-    // }
-}
-
-// Handling the GET requests
-// the get request is used to retrieve data from the server -> we will retrieve the best possible offer based on the user's data (what their budget is)
-fn handle_get_request(received_user_object: Request, user_log: Arc<RwLock<HashMap<User, bool>>>, offers_log: Arc<RwLock<HashMap<User, Offer>>>) {
-    println!("GET request");
-}
-
-fn match_orders(received_user_object: Request, user_log: Arc<RwLock<HashMap<User, bool>>>, offers_log: Arc<RwLock<HashMap<User, Offer>>>) -> Vec<(Offer,User)> {
-
-    let mut read_lock = offers_log.read().unwrap();
-    let sorted_offers = read_lock.clone();
-
-    let mut sorted_offers_vec: Vec<(Offer,User)> = Vec::new();
-
-    for (user, offer) in sorted_offers {
-        sorted_offers_vec.push((offer, user));
-    }
-
-    // filter the offers
-
-
-    // sort the offers by price
-    sorted_offers_vec.sort_by(|a, b| a.0.get_offer_price().cmp(&b.0.get_offer_price()));
-    println!("Sorted offers: {:?}", sorted_offers_vec);
-
-    return sorted_offers_vec;
-
-}
 
