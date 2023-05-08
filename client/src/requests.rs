@@ -141,3 +141,37 @@ impl Request {
     }
 }
 
+
+
+// ====================================================================================================
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, Eq, Hash, PartialEq)]
+pub struct Request_1<T> {
+    request_type: String,
+    data_load: T,
+}
+
+#[allow(dead_code)]
+impl Request_1<POST_Request> {
+    pub fn new(request_type: String, data_load: POST_Request) -> Request_1<POST_Request> {
+        Request_1 {request_type, data_load}
+    }
+    pub fn get_request_type(&self) -> &String {
+        &self.request_type
+    }
+    pub fn get_data_load(&self) -> &POST_Request {
+        &self.data_load
+    }
+}
+
+#[allow(dead_code)]
+impl Request_1<GET_Request> {
+    pub fn new(request_type: String, data_load: GET_Request) -> Request_1<GET_Request> {
+        Request_1 {request_type, data_load}
+    }
+    pub fn get_request_type(&self) -> &String {
+        &self.request_type
+    }
+    pub fn get_data_load(&self) -> &GET_Request {
+        &self.data_load
+    }
+}
