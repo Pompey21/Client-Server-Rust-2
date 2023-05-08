@@ -116,6 +116,33 @@ impl GET_Request {
 // ====================================================================================================
 // Implementing the request struct
 // ====================================================================================================
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, Eq, Hash, PartialEq)]
+pub enum Either_Request<POST_Request, GET_Request> {
+    POST_Request(POST_Request),
+    GET_Request(GET_Request),
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, Eq, Hash, PartialEq)]
+pub struct Request {
+    request_type: String,
+    data_load: Either_Request<POST_Request, GET_Request>,
+}
+
+#[allow(dead_code)]
+impl Request {
+    pub fn new(request_type: String, data_load: Either_Request<POST_Request, GET_Request>) -> Request {
+        Request {request_type, data_load}
+    }
+    pub fn get_request_type(&self) -> &String {
+        &self.request_type
+    }
+    pub fn get_data_load(&self) -> &Either_Request<POST_Request, GET_Request> {
+        &self.data_load
+    }
+}
+
+
+
 // ====================================================================================================
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, Eq, Hash, PartialEq)]
 pub struct Request_1<T> {
