@@ -25,19 +25,13 @@ async fn main() {
 // Sending the first request
     // create a user object
     let user_x = User::new("Marko".to_string(), "123".to_string(), 100, 100, false);
-    // create an offer object
-    let offer_x = Offer::new(100, 10, 100);
     // create a request object
-    // TODO: 
-    // let request_x = Request::new("POST".to_string(), "USER".to_string(), "".to_string(), user_x.clone(), offer_x);
     let post_req_user = POST_User::new(user_x.clone());
     let post_req = POST_Request::new("POST".to_string(), Either::POST_User(post_req_user)); 
-    // let request = Request::new("POST".to_string(), Either_Request::POST_Request(post_req));
 
     let request_1: Request_1<POST_Request> = Request_1::<POST_Request>::new("POST".to_string(), post_req);
 
     // send request to server
-    // TODO: 
     send_post_request(request_1);
 
 
@@ -45,10 +39,21 @@ async fn main() {
 // Sending the second request
     // create a request object
     let offer_y: Offer = Offer::new(100, 10, 100);
-    // let request_y = Request::new("GET".to_string(), "USER".to_string(), "".to_string(), user_x.clone(), offer_y);
+    let request_y = POST_Offer::new(offer_y.clone());
+    let post_req_2 = POST_Request::new("POST".to_string(), Either::POST_Offer(request_y));
+    let request_2: Request_1<POST_Request> = Request_1::<POST_Request>::new("POST".to_string(), post_req_2);
 
     // send request to server
-    // send_request(request_y);
+    send_post_request(request_2);
+
+
+// Sending the third request
+    // create a request object
+    let get_offer: GET_Offer = GET_Offer::new(20, 20, 10);
+    let get_req = GET_Request::new("GET".to_string(), get_offer);
+
+    let request_3: Request_1<GET_Request> = Request_1::<GET_Request>::new("GET".to_string(), get_req);
+    send_get_request(request_3);
 
     loop {
         thread::sleep(std::time::Duration::from_secs(1));

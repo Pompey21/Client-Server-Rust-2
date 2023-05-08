@@ -117,6 +117,25 @@ fn receive_message(mut stream: TcpStream, user_log: Arc<RwLock<HashMap<User, boo
                 // connection closed
                 break;
             }
+            // Handling POST_User
+            Ok(n) if n == 61 => {
+                // send response to client
+                stream.write_all("200 OK".to_string().as_bytes()).unwrap();
+                println!("Sent: 200 OK\n");
+            } 
+            // Handling POST_Offer
+            Ok(n) if n == 40 => {
+                // send response to client
+                stream.write_all("200 OK".to_string().as_bytes()).unwrap();
+                println!("Sent: 200 OK\n");
+            }
+            // Handling GET_Offer
+            Ok(n) if n == 34 => {
+                // send response to client
+                stream.write_all("200 OK".to_string().as_bytes()).unwrap();
+                println!("Sent: 200 OK\n");
+            }
+
             Ok(n) => {
                 println!("n: {}", n);
 
