@@ -6,9 +6,12 @@
 use std::io::{Read, Write};
 use std::{net::{TcpListener, TcpStream}, collections::HashMap, sync::{Arc, RwLock}, fs::File, io::BufReader};
 
+mod requests;
 mod request;
 mod user;
 mod offer;
+
+// use requests::{POST_User, POST_Offer, POST_Request, GET_Offer GET_Request, Request, Either, Either_Request};
 
 use user::User;
 use request::Request;
