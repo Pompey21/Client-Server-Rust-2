@@ -4,7 +4,6 @@
 
 mod requests;
 mod user;
-mod request;
 
 use std::io::{Read, Write};
 use std::net::{TcpStream};
