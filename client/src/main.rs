@@ -10,10 +10,8 @@ use std::net::{TcpStream};
 use std::thread;
 
 use user::User;
-// use request::Request;
-use requests::{POST_User, POST_Offer, POST_Request, GET_Offer, GET_Request, Request, Either, Either_Request, Request_1};
+use requests::{POST_User, POST_Offer, POST_Request, GET_Offer, GET_Request, Either, Either_Request, Request_1};
 
-// use requests::{POST_User, POST_Offer, POST_Request, GET_Offer GET_Request, Request, Either, Either_Request};
 
 mod offer;
 use offer::Offer;
@@ -37,7 +35,7 @@ async fn main() {
 
 // Sending the second request
     // create a request object
-    let offer_y: Offer = Offer::new(100, 10, 100);
+    let offer_y: Offer = Offer::new("Marko".to_string(), 100, 10, 100);
     let request_y = POST_Offer::new(offer_y.clone());
     let post_req_2 = POST_Request::new("POST".to_string(), Either::POST_Offer(request_y));
     let request_2: Request_1<POST_Request> = Request_1::<POST_Request>::new("POST".to_string(), post_req_2);

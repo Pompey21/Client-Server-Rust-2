@@ -25,7 +25,7 @@ async fn main() {
     let user_log:Arc<RwLock<HashMap<User, bool>>> = Arc::new(RwLock::new(HashMap::new()));
 
     // list of offers
-    let offers_log: Arc<RwLock<HashMap<User, Offer>>> = Arc::new(RwLock::new(HashMap::new()));
+    let offers_log: Arc<RwLock<HashMap<String, Offer>>> = Arc::new(RwLock::new(HashMap::new()));
 
     // initialising the offers
     let parsed_data: Vec<(User,Offer)> = read_from_txt_file("/Users/admin/Desktop/Client-Server-Rust-2/server/src/offers_init.txt".to_string());
@@ -75,16 +75,16 @@ fn read_from_txt_file(text_file_name: String) -> Vec<(User, Offer)> {
 // Parsing the data from the text file
 fn generate_instances(line_vector: Vec<&str>) -> (User, Offer) {
     let user_new: User = User::new(line_vector[0].to_string(), line_vector[1].to_string(), line_vector[2].parse::<u32>().unwrap(), line_vector[3].parse::<u32>().unwrap(), true);
-    let offer_new: Offer = Offer::new(100, line_vector[3].parse::<u32>().unwrap(), line_vector[4].parse::<u32>().unwrap());
+    let offer_new: Offer = Offer::new(line_vector[0].to_string(), 100, line_vector[3].parse::<u32>().unwrap(), line_vector[4].parse::<u32>().unwrap());
     return (user_new, offer_new);
 }
 
 // Initialising the global variables
-fn initialise_global_variables(parsed_data: Vec<(User,Offer)>, user_log: Arc<RwLock<HashMap<User, bool>>>, offers_log: Arc<RwLock<HashMap<User, Offer>>>) {
+fn initialise_global_variables(parsed_data: Vec<(User,Offer)>, user_log: Arc<RwLock<HashMap<User, bool>>>, offers_log: Arc<RwLock<HashMap<String, Offer>>>) {
     let mut write_lock_offers = offers_log.write().unwrap();
     let mut write_lock_users = user_log.write().unwrap();
     for (user, offer) in parsed_data {
-        write_lock_offers.insert(user.clone(), offer.clone());
+        write_lock_offers.insert(user.get_user_name().to_string(), offer.clone());
         write_lock_users.insert(user.clone(), true);
     }
 }
@@ -95,7 +95,7 @@ fn initialise_global_variables(parsed_data: Vec<(User,Offer)>, user_log: Arc<RwL
 // ===========================================================
 // receive the message
 const HEADER_SIZE: usize = 4;
-fn receive_message(mut stream: TcpStream, user_log: Arc<RwLock<HashMap<User, bool>>>, offers_log: Arc<RwLock<HashMap<User, Offer>>>) {
+fn receive_message(mut stream: TcpStream, user_log: Arc<RwLock<HashMap<User, bool>>>, offers_log: Arc<RwLock<HashMap<String, Offer>>>) {
     
     // Read the message length from the header
     let mut header = [0; HEADER_SIZE];
@@ -136,9 +136,6 @@ fn receive_message(mut stream: TcpStream, user_log: Arc<RwLock<HashMap<User, boo
                         let mut write_lock = user_log.write().unwrap();
                         write_lock.insert(rec_usr_obj.clone(), true);
 
-                        // // add the user to the offers_log - just as a key
-                        // let mut write_lock = offers_log.write().unwrap();
-                        // write_lock.insert(rec_usr_obj.clone(), Offer::new(0, 0, 0));
                     },
                     Either::POST_Offer(offer) => {}
                 }
@@ -161,9 +158,9 @@ fn receive_message(mut stream: TcpStream, user_log: Arc<RwLock<HashMap<User, boo
                         let rec_ofr_obj = offer.get_offer();
                         println!("Received offer object: {:?}", rec_ofr_obj);
 
-                        // // add the offer to the offers_log
-                        // let mut write_lock = offers_log.write().unwrap();
-                        // write_lock.insert(rec_ofr_obj.clone(), offer.clone());
+                        // add the offer to the offers_log
+                        let mut write_lock = offers_log.write().unwrap();
+                        write_lock.insert(rec_ofr_obj.get_username().to_string(), rec_ofr_obj.clone());
                     }
                 }
                 println!("Received: {:?}\n", received_user_object);
@@ -180,6 +177,10 @@ fn receive_message(mut stream: TcpStream, user_log: Arc<RwLock<HashMap<User, boo
                 // unpack the message
                 let received_offer: GET_Offer = unpack_get_req(received_user_object);
                 println!("Received user: {:?}", received_offer);
+
+                // get the offer from the offers_log
+                let offer = retrieve_offer(offers_log.clone(), received_offer.clone());
+                println!("Offer: {:?}", offer);
             }
 
             Ok(n) => {
@@ -205,7 +206,7 @@ fn receive_message(mut stream: TcpStream, user_log: Arc<RwLock<HashMap<User, boo
 
 
 
-
+// ===========================================================
 // ===========================================================
 // Deserialise POST and GET requests
 // ===========================================================
@@ -229,6 +230,34 @@ fn deserialise_get_req(mut buffer: Vec<u8>) -> Request_1<GET_Request> {
 fn unpack_get_req(received_user_object: Request_1<GET_Request>) -> GET_Offer {
     let received_user = received_user_object.get_data_load().get_data_load();
     return received_user.clone();
+}
+// ===========================================================
+// ===========================================================
+// Offer Query and Retrieval
+// ===========================================================
+fn retrieve_offer(offers_log: Arc<RwLock<HashMap<String, Offer>>>, offer_requirements: GET_Offer) -> Option<Offer> {
+    let read_lock = offers_log.read().unwrap();
+    let mut offer_list: Vec<Offer> = Vec::new();
+    for (user, offer) in read_lock.iter() {
+        if offer.get_offer_time() >= offer_requirements.get_time() &&
+            offer.get_offer_space() >= offer_requirements.get_memory() &&
+            offer.get_offer_price() <= offer_requirements.get_deposit() {
+                offer_list.push(offer.clone());
+            }
+    }
+    if offer_list.len() == 0 {
+        return None;
+    } else {
+        let mut min_price = offer_list[0].get_offer_price();
+        let mut min_index = 0;
+        for i in 0..offer_list.len() {
+            if offer_list[i].get_offer_price() < min_price {
+                min_price = offer_list[i].get_offer_price();
+                min_index = i;
+            }
+        }
+        return Some(offer_list[min_index].clone());
+    }
 }
 
 
