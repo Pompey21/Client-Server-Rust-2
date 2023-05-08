@@ -28,10 +28,15 @@ async fn main() {
     // create an offer object
     let offer_x = Offer::new(100, 10, 100);
     // create a request object
+    // TODO: 
     // let request_x = Request::new("POST".to_string(), "USER".to_string(), "".to_string(), user_x.clone(), offer_x);
+    let post_req_user = POST_User::new(user_x.clone());
+    let post_req = POST_Request::new("POST".to_string(), Either::POST_User(post_req_user)); 
+    let request = Request::new("POST".to_string(), Either_Request::POST_Request(post_req));
 
     // send request to server
-    // send_request(request_x);
+    // TODO: 
+    // send_request(request);
 
 
 

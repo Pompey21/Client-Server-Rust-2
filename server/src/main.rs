@@ -11,10 +11,10 @@ mod request;
 mod user;
 mod offer;
 
-// use requests::{POST_User, POST_Offer, POST_Request, GET_Offer GET_Request, Request, Either, Either_Request};
+use requests::{POST_User, POST_Offer, POST_Request, GET_Offer GET_Request, Request, Either, Either_Request};
 
 use user::User;
-use request::Request;
+// use request::Request;
 use offer::Offer;
 use std::io::BufRead;
 
@@ -123,12 +123,13 @@ fn handle_serialised_user_object(mut stream: TcpStream, user_log: Arc<RwLock<Has
                 println!("Received: {:?}\n", received_user_object);
 
                 if received_user_object.get_request_type().starts_with("POST") {
-                    handle_post_request(received_user_object, user_log.clone(), offers_log.clone());
+                    // handle_post_request(received_user_object, user_log.clone(), offers_log.clone());
+                    println!("POST request");
                 }
 
                 else {
-                    // println!("GET request");
-                    handle_get_request(received_user_object, user_log.clone(), offers_log.clone());
+                    println!("GET request");
+                    // handle_get_request(received_user_object, user_log.clone(), offers_log.clone());
                 }
 
 
