@@ -2,13 +2,20 @@
 // CLIENT IMPLEMENTATION
 // ======================================
 
+mod requests;
+mod user;
+mod request;
+
 use std::io::{Read, Write};
 use std::net::{TcpStream};
 use std::thread;
-mod user;
+
 use user::User;
-mod request;
-use request::Request;
+// use request::Request;
+use requests::{POST_User, POST_Offer, POST_Request, GET_Offer, GET_Request, Request, Either, Either_Request};
+
+// use requests::{POST_User, POST_Offer, POST_Request, GET_Offer GET_Request, Request, Either, Either_Request};
+
 mod offer;
 use offer::Offer;
 
@@ -21,20 +28,20 @@ async fn main() {
     // create an offer object
     let offer_x = Offer::new(100, 10, 100);
     // create a request object
-    let request_x = Request::new("POST".to_string(), "USER".to_string(), "".to_string(), user_x.clone(), offer_x);
+    // let request_x = Request::new("POST".to_string(), "USER".to_string(), "".to_string(), user_x.clone(), offer_x);
 
     // send request to server
-    send_request(request_x);
+    // send_request(request_x);
 
 
 
 // Sending the second request
     // create a request object
     let offer_y: Offer = Offer::new(100, 10, 100);
-    let request_y = Request::new("GET".to_string(), "USER".to_string(), "".to_string(), user_x.clone(), offer_y);
+    // let request_y = Request::new("GET".to_string(), "USER".to_string(), "".to_string(), user_x.clone(), offer_y);
 
     // send request to server
-    send_request(request_y);
+    // send_request(request_y);
 
     loop {
         thread::sleep(std::time::Duration::from_secs(1));
