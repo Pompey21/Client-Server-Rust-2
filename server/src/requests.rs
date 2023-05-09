@@ -39,7 +39,7 @@ impl POST_Offer {
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, Eq, Hash, PartialEq)]
-pub enum Either<POST_User, POST_Offer> {
+pub enum Either {
     POST_User(POST_User),
     POST_Offer(POST_Offer),
 }
@@ -48,18 +48,18 @@ pub enum Either<POST_User, POST_Offer> {
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, Eq, Hash, PartialEq)]
 pub struct POST_Request {
     request_type: String,
-    data_load: Either<POST_User, POST_Offer>,
+    data_load: Either,
 }
 
 #[allow(dead_code)]
 impl POST_Request {
-    pub fn new(request_type: String, data_load: Either<POST_User, POST_Offer>) -> POST_Request {
+    pub fn new(request_type: String, data_load: Either) -> POST_Request {
         POST_Request {request_type, data_load}
     }
     pub fn get_request_type(&self) -> &String {
         &self.request_type
     }
-    pub fn get_data_load(&self) -> &Either<POST_User, POST_Offer> {
+    pub fn get_data_load(&self) -> &Either {
         &self.data_load
     }
 }
