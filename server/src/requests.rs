@@ -3,6 +3,20 @@
 use crate::User;
 use crate::Offer;
 
+// #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, Eq, Hash, PartialEq)]
+// pub enum User_or_Offer {
+//     User,
+//     Offer,
+// }
+
+// #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, Eq, Hash, PartialEq)]
+// struct Request<T> {
+//     request_type: Either,
+//     data_type: User_or_Offer,
+//     data_load: T,
+// }
+
+
 // ====================================================================================================
 // Implementing the POST structs
 // ====================================================================================================

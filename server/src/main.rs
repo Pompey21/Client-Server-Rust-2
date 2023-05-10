@@ -107,13 +107,9 @@ fn receive_message(mut stream: TcpStream, user_log: Arc<RwLock<HashMap<User, boo
     let mut buffer = vec![0; message_len as usize];
     println!("Buffer type: {}", std::any::type_name::<Vec<u8>>());
 
-    // Read the message payload into the buffer
-    // stream.read_exact(&mut buffer).unwrap();
-
 
     loop {
         match stream.read(&mut buffer) {
-            // println!("Received: {:?}\n", buffer);
             Ok(n) if n == 0 => {
                 // connection closed
                 break;
@@ -143,7 +139,7 @@ fn receive_message(mut stream: TcpStream, user_log: Arc<RwLock<HashMap<User, boo
 
             } 
             // Handling POST_Offer
-            Ok(n) if n == 40 => {
+            Ok(n) if n == 53 => {
                 // send response to client
                 stream.write_all("200 OK".to_string().as_bytes()).unwrap();
                 println!("Sent: 200 OK\n");
@@ -181,6 +177,21 @@ fn receive_message(mut stream: TcpStream, user_log: Arc<RwLock<HashMap<User, boo
                 // get the offer from the offers_log
                 let offer = retrieve_offer(offers_log.clone(), received_offer.clone());
                 println!("Offer: {:?}", offer);
+
+                // send the offer to the client
+                let offer = offer.unwrap();
+                println!("Offer: {:?}", offer);
+
+                // serialise the offer
+                let serialised_offer = bincode::serialize(&offer).unwrap();
+                // stream.write_all(&serialised_offer).unwrap();
+
+                // send the offer to the client
+                let SIZE_OF_MESSAGE = serialised_offer.len() as u32;
+                let mut header = SIZE_OF_MESSAGE.to_be_bytes().to_vec();
+                header.copy_from_slice(&SIZE_OF_MESSAGE.to_be_bytes());
+                stream.write_all(&header).unwrap();
+                stream.write_all(&serialised_offer).unwrap();
             }
 
             Ok(n) => {
@@ -197,7 +208,6 @@ fn receive_message(mut stream: TcpStream, user_log: Arc<RwLock<HashMap<User, boo
             }
             Err(e) => {
                 eprintln!("Error reading from stream: {}", e);
-                stream.write_all("400 BAD REQUEST".to_string().as_bytes()).unwrap();
                 // break;
             }
         }
